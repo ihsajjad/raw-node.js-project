@@ -1,0 +1,9 @@
+{
+  "name": "raw-nodejs-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "node": "^21.6.1"
+  }
+}
