@@ -4,9 +4,12 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "set NODE_ENV=staging&& nodemon index.js",
+    "production": "set NODE_ENV=production&& nodemon index.js"
   },
   "dependencies": {
     "node": "^21.6.1"
-  }
+  },
+  "repository": "https://github.com/ihsajjad/raw-node.js-project.git",
+  "author": "ihsajjad <ihsajjad1@gmail.com>"
 }
