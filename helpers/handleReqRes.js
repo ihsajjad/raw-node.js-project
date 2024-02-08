@@ -12,6 +12,7 @@ const routes = require("../routes");
 const {
   notFoundHandler,
 } = require("../handlers/routeHandlers/notFoundHandler");
+const { parseJSON } = require("./utilities");
 
 // module scaffolding
 const handler = {};
@@ -20,8 +21,8 @@ handler.handleReqRes = (req, res) => {
   // request handling
   // get the url and parse it
   const parsedUrl = url.parse(req.url, true);
-  const { path, query: queryStringObject } = parsedUrl;
-  const trimedPath = path.replace(/^\/+|\/+$/g, "");
+  const { path, pathname, query: queryStringObject } = parsedUrl;
+  const trimedPath = pathname.replace(/^\/+|\/+$/g, "");
   const method = req.method.toLowerCase();
   const headersObject = req.headers;
 
@@ -36,7 +37,6 @@ handler.handleReqRes = (req, res) => {
 
   const decoder = new StringDecoder("utf-8");
   let realData = "";
-
   const chosenHandler = routes[trimedPath]
     ? routes[trimedPath]
     : notFoundHandler;
@@ -47,19 +47,20 @@ handler.handleReqRes = (req, res) => {
 
   req.on("end", () => {
     realData += decoder.end();
+    requestProperties.body = parseJSON(realData);
 
-    chosenHandler(requestProperties, (statusCode, payload) => {
+    chosenHandler(requestProperties, async (statusCode, payload) => {
       statusCode = typeof statusCode === "number" ? statusCode : 500;
       payload = typeof payload === "object" ? payload : {};
 
       const payloadString = JSON.stringify(payload);
 
       //   return the final response
-      res.writeHead(statusCode);
-      res.end(payloadString);
+      await res.setHeader("Content-Type", "application/json");
+      await res.writeHead(statusCode);
+      // res.write();
+      await res.end(payloadString);
     });
-
-    res.end("Hello Priends");
   });
 
   // response handle
