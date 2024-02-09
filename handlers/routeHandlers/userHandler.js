@@ -8,6 +8,7 @@
 // dependencies
 const data = require("../../lib/data");
 const { hash, parseJSON } = require("../../helpers/utilities");
+const { _token } = require("./tokenHandler");
 
 // moduler scaffolding
 const handler = {};
@@ -82,34 +83,47 @@ handler._users.post = (requestProperties, callBack) => {
   }
 };
 
-// todo: authentication
 handler._users.get = (requestProperties, callBack) => {
   let { phone } = requestProperties.queryStringObject;
+  let { token } = requestProperties.headersObject;
 
   // check the phone number if valid
   phone =
     typeof phone === "string" && phone.trim().length === 11 ? phone : null;
 
   if (phone) {
-    // lookup the user
-    data.read("users", phone, (err, data) => {
-      const user = { ...parseJSON(data) };
+    // verify token
+    token = typeof token === "string" ? token : false;
 
-      if (!err && data) {
-        delete user.password;
-        callBack(200, user);
-      } else {
-        callBack(404, { error: "Requested user was not found!" });
-      }
-    });
+    if (token) {
+      _token.verify(token, phone, (isValidToken) => {
+        if (isValidToken) {
+          // lookup the user
+          data.read("users", phone, (err, data) => {
+            const user = { ...parseJSON(data) };
+
+            if (!err && data) {
+              delete user.password;
+              callBack(200, user);
+            } else {
+              callBack(404, { error: "Requested user was not found!" });
+            }
+          });
+        } else {
+          callBack(403, { error: "Authencation failure!" });
+        }
+      });
+    } else {
+      callBack(403, { error: "Invalid token!" });
+    }
   } else {
     callBack(404, { error: "Requested user was not found!" });
   }
 };
 
-// todo: authentication
 handler._users.put = (requestProperties, callBack) => {
   let { firstName, lastName, phone, password } = requestProperties.body;
+  let { token } = requestProperties.headersObject;
 
   firstName =
     typeof firstName === "string" && firstName.trim().length > 0
@@ -131,29 +145,47 @@ handler._users.put = (requestProperties, callBack) => {
 
   if (phone) {
     if (firstName || lastName || password) {
-      // lookup the user
-      data.read("users", phone, (err, userData) => {
-        const user = { ...parseJSON(userData) };
+      // verify token
+      token = typeof token === "string" ? token : false;
 
-        if (!err) {
-          if (firstName) user.firstName = firstName;
-          if (lastName) user.lastName = lastName;
-          if (password) user.password = hash(password);
+      if (token) {
+        _token.verify(token, phone, (isValidToken) => {
+          if (isValidToken) {
+            // lookup the user
 
-          // store to database
-          data.update("users", phone, user, (err) => {
-            if (!err) {
-              callBack(200, { message: "User was updated succesfully." });
-            } else {
-              callBack(500, {
-                message: "There was a problem in the server, Please try again!",
-              });
-            }
-          });
-        } else {
-          callBack(400, { error: "Invalid phone number, Please try again!" });
-        }
-      });
+            // lookup the user
+            data.read("users", phone, (err, userData) => {
+              const user = { ...parseJSON(userData) };
+
+              if (!err) {
+                if (firstName) user.firstName = firstName;
+                if (lastName) user.lastName = lastName;
+                if (password) user.password = hash(password);
+
+                // store to database
+                data.update("users", phone, user, (err) => {
+                  if (!err) {
+                    callBack(200, { message: "User was updated succesfully." });
+                  } else {
+                    callBack(500, {
+                      message:
+                        "There was a problem in the server, Please try again!",
+                    });
+                  }
+                });
+              } else {
+                callBack(400, {
+                  error: "Invalid phone number, Please try again!",
+                });
+              }
+            });
+          } else {
+            callBack(403, { error: "Authencation failure!" });
+          }
+        });
+      } else {
+        callBack(403, { error: "Invalid token!" });
+      }
     } else {
       callBack(400, { error: "You had a bad request!" });
     }
@@ -165,26 +197,42 @@ handler._users.put = (requestProperties, callBack) => {
 // todo: authentication
 handler._users.delete = (requestProperties, callBack) => {
   let { phone } = requestProperties.queryStringObject;
+  let { token } = requestProperties.headersObject;
 
   // check the phone number if valid
   phone =
     typeof phone === "string" && phone.trim().length === 11 ? phone : null;
 
   if (phone) {
-    // lookup the user
-    data.read("users", phone, (err, userData) => {
-      if (!err && userData) {
-        data.delete("users", phone, (err, userData) => {
-          if (!err) {
-            callBack(200, { error: "User was deleted successfully." });
-          } else {
-            callBack(500, { error: "There was a problem in the server!" });
-          }
-        });
-      } else {
-        callBack(500, { error: "There was a problem in the server!" });
-      }
-    });
+    // verify token
+    token = typeof token === "string" ? token : false;
+
+    if (token) {
+      _token.verify(token, phone, (isValidToken) => {
+        if (isValidToken) {
+          // lookup the user
+          data.read("users", phone, (err, userData) => {
+            if (!err && userData) {
+              data.delete("users", phone, (err, userData) => {
+                if (!err) {
+                  callBack(200, { error: "User was deleted successfully." });
+                } else {
+                  callBack(500, {
+                    error: "There was a problem in the server!",
+                  });
+                }
+              });
+            } else {
+              callBack(500, { error: "There was a problem in the server!" });
+            }
+          });
+        } else {
+          callBack(403, { error: "Authencation failure!" });
+        }
+      });
+    } else {
+      callBack(403, { error: "Invalid token!" });
+    }
   } else {
     callBack(400, { error: "There was a problem in your request" });
   }

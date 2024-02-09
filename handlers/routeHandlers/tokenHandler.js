@@ -115,7 +115,6 @@ handler._token.put = (requestProperties, callBack) => {
   }
 };
 
-// todo: authentication
 handler._token.delete = (requestProperties, callBack) => {
   let { id } = requestProperties.queryStringObject;
 
@@ -142,4 +141,18 @@ handler._token.delete = (requestProperties, callBack) => {
   }
 };
 
+handler._token.verify = (id, phone, callBack) => {
+  data.read("tokens", id, (err, tokenData) => {
+    if (!err && tokenData) {
+      const tokenObject = parseJSON(tokenData);
+      if (tokenObject.phone === phone && tokenObject.expires > Date.now()) {
+        callBack(true);
+      } else {
+        callBack(false);
+      }
+    } else {
+      callBack(false);
+    }
+  });
+};
 module.exports = handler;
