@@ -45,7 +45,7 @@ utilities.createRandomString = (strLength) => {
   if (length) {
     const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-    for (let i = 0; i <= length; i++) {
+    for (let i = 0; i <= length - 1; i++) {
       const randomIndex = Math.floor(Math.random() * characters.length);
       const randomCharacter = characters.charAt(randomIndex);
       output += randomCharacter;

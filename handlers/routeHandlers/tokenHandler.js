@@ -68,7 +68,7 @@ handler._token.post = (requestProperties, callBack) => {
 handler._token.get = (requestProperties, callBack) => {
   let { id } = requestProperties.queryStringObject;
   // check the id if valid
-  id = typeof id === "string" && id.trim().length === 21 ? id : null;
+  id = typeof id === "string" && id.trim().length === 20 ? id : null;
 
   if (id) {
     // lookup the token
@@ -89,7 +89,7 @@ handler._token.get = (requestProperties, callBack) => {
 handler._token.put = (requestProperties, callBack) => {
   let { id, extend } = requestProperties.body;
 
-  id = typeof id === "string" && id.trim().length === 21 ? id : null;
+  id = typeof id === "string" && id.trim().length === 20 ? id : null;
 
   extend = typeof extend === "boolean" && extend === true ? extend : false;
 
@@ -119,7 +119,7 @@ handler._token.delete = (requestProperties, callBack) => {
   let { id } = requestProperties.queryStringObject;
 
   // check the id if valid
-  id = typeof id === "string" && id.trim().length === 21 ? id : null;
+  id = typeof id === "string" && id.trim().length === 20 ? id : null;
 
   if (id) {
     // lookup the token
